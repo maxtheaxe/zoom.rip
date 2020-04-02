@@ -14,8 +14,17 @@ import time
 import random
 
 # launch() - launch sequence to get driver started, logged in, and prepared to work
+def launch(room_link, headless = True, bot_name = "Matt Smith"):
+	print("\n\t--- zoom.rip | making remote learning fun ---\n")
+	driver = start_driver(headless) # start the driver and store it (will be returned)
+	login(driver, room_link, bot_name) # log into the room with the room link and name
+	# open_participants(driver) # open participants panel so data can be collected
+	open_chat(driver) # open chat for some fun later
+	return driver # return driver so it can be stored and used later
+
+# multi_launch() - launch sequence to get driver started, logged in, and prepared to work
 # flood mode removes chat opening and other stuff, maximizes speed
-def launch(room_link, num_clients = 1, headless = True, flood = True):
+def multi_launch(room_link, num_clients = 1, headless = True, flood = True):
 	print("\n\t--- zoom.rip | making remote learning fun ---\n")
 	driver_list = [] # a spot to store multiple drivers (for multiple clients)
 	for i in range(num_clients):
@@ -64,7 +73,7 @@ def link_builder(room_link):
 # reference: https://crossbrowsertesting.com/blog/test-automation/automate-login-with-selenium/
 # reference: https://stackoverflow.com/questions/19035186/how-to-select-element-using-xpath-syntax-on-selenium-for-python
 # future: add password support (for locked rooms)
-def login(driver, room_link, bot_name = "big boi"):
+def login(driver, room_link, bot_name = "Matt Smith"):
 	print("\tLogging in...\n")
 	web_link = link_builder(room_link) # convert to web client link
 	try: # try opening the given link, logging in
@@ -278,24 +287,10 @@ def take_attendance(driver):
 	print("\tCurrent Students: ", new_attendee_list, "\n") # print list of attendee names
 	return new_attendee_list # return attendee list
 
-# leave_meeting() - leaves the meeting
-# primarily to save sanity during testing--there are currently so many old bots logged in
-# broken: clicks getting intercepted(??) for some reason, non-essential feature
+# leave_meeting() - leaves the meeting by closing the driver and quitting
 def leave_meeting(driver):
 	print("\tLeaving meeting...\n")
-	driver.find_element_by_class_name("footer__leave-btn").click()
-	time.sleep(2) # wait a sec, doesn't need to be great
-	# hit tab twice to go to button, could be done better
-	# go away, it's just a sanity saver
-	# actions = ActionChains(driver)
-	# actions.send_keys(Keys.TAB).perform() # press tab key
-	# time.sleep(1)
-	# actions.send_keys(Keys.TAB).perform() # press tab key again
-	# time.sleep(1)
-	# actions.send_keys(Keys.TAB).perform() # press tab key again
-	# time.sleep(1)
-	# actions.send_keys(Keys.ENTER).perform() # press enter key
-	# target = driver.find_element_by_xpath("//*[contains(text(), 'Leave Meeting')]")
+	driver.quit() # quit and close the driver to prevent issues
 	print("\tSuccessfully left the meeting. See you next time!\n")
 	return
 
@@ -336,11 +331,35 @@ def go_dark(driver):
 	print("\tGoing dark!\n") # let user know you're going undercover
 	open_participants(driver) # open participants so you can access 'em
 	name_options = take_attendance(driver) # store current students in list
+	# check who the host is
+	host_name = identify_host(driver)
+	# remove the host's name from the attendance list (they'll know you're not them)
+	name_options.remove(host_name)
 	chosen_name = random.choice(name_options) # choose someone randomly
 	change_name(driver, chosen_name) # call change name function
 	close_participants(driver) # close the participants list
 	print("\tIdentity theft complete.\n") # let user know you're safely hidden
 	return
+
+# cavalry() - brings the "cavalry," by bringing in other bots with stolen names
+def cavalry(driver, room_link, num_bots = 10):
+	headless = True # should they show the chrome GUI?
+	driver_list = [] # create list for storing newly-created bots
+	name_options = take_attendance(driver) # get list of students
+	og_name_options = name_options[:] # clone the list in case we need more later
+	random.shuffle(name_options) # shuffle the name list
+	for i in range(num_bots): # loop for as many times as num bots desired
+		# account for case where desired num is higher than attendance
+		# there's def a better way, but this is fine for these purposes
+		if len(name_options) == 0:
+			name_options = og_name_options[:]
+		# set bot_name by popping name from attendance list (name_options)
+		bot_name = name_options.pop()
+		# launch another driver/client with the given info
+		driver = launch(room_link, headless, bot_name)
+		# store the newly-created bot in our list of drivers
+		driver_list.append(driver)
+	return driver_list # return the list of newly-created drivers
 
 def main(argv):
 	# print("\n\t--- Zoom Education Suite | Host Client ---\n")
@@ -364,7 +383,7 @@ def main(argv):
 	# time.sleep(10)
 	# print("\tFinished.\n")
 	# zoom.rip testing
-	driver = launch("https://us04web.zoom.us/j/521134612?pwd=Z0s0K2FRK0JFRFkyc0hUb2hpdFVHdz09", 1, False)
+	driver = launch("https://us04web.zoom.us/j/521134612?pwd=Z0s0K2FRK0JFRFkyc0hUb2hpdFVHdz09", False)
 	go_dark(driver[0])
 	time.sleep(60)
 

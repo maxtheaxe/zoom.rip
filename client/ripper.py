@@ -299,7 +299,7 @@ def sing_song(driver_list, lyrics):
 	lyric_list = lyrics[:]
 	while (len(lyric_list) > 0):
 		# while there are still lyrics left to sing in the lyric list
-		for i in range(driver_list):
+		for i in range(len(driver_list)):
 			# loop through the driver list and have each one sing a line
 			mass_message(driver_list[i], lyric_list[0])
 			# then chop off the lyric that was just sent and restart
@@ -309,11 +309,15 @@ def sing_song(driver_list, lyrics):
 # feed_song() - feed a song from a text file to the bots
 # ref: https://codippa.com/how-to-read-a-file-line-by-line-into-a-list-in-python/
 def feed_song(driver_list, file_name):
+	# print("\tOpening file...")
 	# open file in read mode
 	with open(file_name, 'r') as file_handle:
 		# read file content into list
 		lines = file_handle.readlines()
-	return lines
+	# print("\tLyrics:\n\n", lines)
+	# call the sing_song function to actually do the singing
+	sing_song(driver_list, lines)
+	return
 
 # take_attendance() - take attendance of who is there at current time
 # I'd have avoided the second list creation, but attendee list was polluted by bot names
@@ -450,11 +454,13 @@ def infiltrate():
 	"Feel free to message me on Twitter @MaxPerrello for any reason whatsoever."]
 	# send a message to the teacher, explaining what's going on and how to reach me
 	send_message(first_bot, "host", teach_msg)
+	# switch first bot back to group chat, away from PM to host (and send intro msg)
+	send_message(first_bot, "Everyone", "Hi, everyone!")
 	# have the first bot go dark, stealth mode
 	go_dark(first_bot)
 	# append it to the storage list
 	bot_list.append(first_bot)
-	num_bots = input("\n\tHow many fake users to you want to flood the meeting?\n\n" +
+	num_bots = input("\n\tHow many additional fake users to you want to flood the meeting?\n" +
 		"\t(Keep in mind they will use system resources and slow down your computer)\n")
 	try: # try to cast the given input to an int
 		num_bots = int(num_bots)
@@ -496,9 +502,10 @@ if __name__ == '__main__':
 	print("\tUse Control + C to close all bots.") # print instructions
 	while True:
 		# prompt the user to create a lyric file and feed it in
-		file_name = input("\tWant the bots to sing a song?\nJust paste the lyrics" +
+		# could have used genius api, but wanted to simplify, might add later
+		file_name = input("\tWant the bots to sing a song?\n\tJust paste the lyrics" +
 			" into a text file in this directory, save it, then type the filename in" +
-			" and hit the Enter key.\n(Wait until one is done to start the next one)\n")
+			" and hit the Enter key.\n\t(Wait until one is done to start the next one)\n")
 		# call the feed song function with the given file name (should be in same folder)
 		feed_song(bot_list, file_name)
 		# Do nothing and hog CPU forever until SIGINT received.

@@ -12,14 +12,16 @@ import sys
 import re
 import time
 import random
+import signal
 
 # launch() - launch sequence to get driver started, logged in, and prepared to work
 def launch(room_link, headless = True, bot_name = "Matt Smith"):
-	print("\n\t--- zoom.rip | making remote learning fun ---\n")
+	print("\tLaunching a bot...\n")
 	driver = start_driver(headless) # start the driver and store it (will be returned)
 	login(driver, room_link, bot_name) # log into the room with the room link and name
 	# open_participants(driver) # open participants panel so data can be collected
 	open_chat(driver) # open chat for some fun later
+	print("\t", bot_name, "successfully launched.\n")
 	return driver # return driver so it can be stored and used later
 
 # multi_launch() - launch sequence to get driver started, logged in, and prepared to work
@@ -277,6 +279,7 @@ def send_message(driver, recipient = "host_69974030947301", message = "Happy Apr
 # I'd have avoided the second list creation, but attendee list was polluted by bot names
 # could add filtering out prof later, but requires searching addditional elements
 def take_attendance(driver):
+	open_participants(driver) # open participants so you can access 'em
 	# collect all attendees into list by looking for spans with the following class
 	attendee_list = driver.find_elements_by_class_name("participants-item__display-name")
 	new_attendee_list = [] # for storing refined list (filters out self)
@@ -284,6 +287,7 @@ def take_attendance(driver):
 		if (attendee_list[i].get_attribute("innerHTML") != "zoom edu bot"): # if not bot
 			# then refine to name and add to the new list
 			new_attendee_list.append(attendee_list[i].get_attribute("innerHTML"))
+	close_participants(driver) # close the participants list
 	print("\tCurrent Students: ", new_attendee_list, "\n") # print list of attendee names
 	return new_attendee_list # return attendee list
 
@@ -329,15 +333,19 @@ def change_name(driver, new_name):
 # go_dark() - takes attendance and chooses name at random, then changes its own to match
 def go_dark(driver):
 	print("\tGoing dark!\n") # let user know you're going undercover
-	open_participants(driver) # open participants so you can access 'em
 	name_options = take_attendance(driver) # store current students in list
 	# check who the host is
 	host_name = identify_host(driver)
 	# remove the host's name from the attendance list (they'll know you're not them)
 	name_options.remove(host_name)
-	chosen_name = random.choice(name_options) # choose someone randomly
+	# if there is anyone else there in attendance
+	if (len(name_options) >= 1):
+		# then choose one of their names randomly
+		chosen_name = random.choice(name_options)
+	else: # if noone but the host is there
+		# set your name to Matt Smith
+		chosen_name = "Matt Smith"
 	change_name(driver, chosen_name) # call change name function
-	close_participants(driver) # close the participants list
 	print("\tIdentity theft complete.\n") # let user know you're safely hidden
 	return
 
@@ -361,31 +369,66 @@ def cavalry(driver, room_link, num_bots = 10):
 		driver_list.append(driver)
 	return driver_list # return the list of newly-created drivers
 
+# infiltrate() - "infiltrate" the class by setting details and then flooding with clones
+def infiltrate():
+	headless = True
+	bot_list = [] # list of drivers for each bot to close later
+	print("\n\tWelcome to zoom.rip! Please don't abuse it.\n" +
+		"\tI take no responsibility for your actions. Happy April Fools Day!" +
+		"\n\n\tFollow @MaxPerrello on Twitter for future updates.\n")
+	# wanted to keep char count below ninety
+	room_link = input("\n\tWhat is the zoom meeting link?\n" +
+		"\t(Paste it in and hit the Enter key)\n")
+	print("\n") # for terminal formatting niceties
+	# first_name = input("\tWhat do you want the first bot's name to be?\n" +
+	# 	"\t(Think of something believable, then type it in and hit the Enter key)\n")
+	# if you're looking at this, you know what this is and why I've done it
+	first_name = "_Matt"
+	# make the first bot that will open the floodgates
+	first_bot = launch(room_link, headless, first_name)
+	# have the first bot go dark, stealth mode
+	go_dark(first_bot)
+	# append it to the storage list
+	bot_list.append(first_bot)
+	num_bots = input("\n\tHow many fake users to you want to flood the meeting?\n\n" +
+		"\t(Keep in mind they will use system resources and slow down your computer)\n")
+	try: # try to cast the given input to an int
+		num_bots = int(num_bots)
+	except: # if it fails, tell them and just use 10 instead
+		print("\tSorry, that wasn't a number. Defaulting to 10 bots.\n")
+		num_bots = 10
+	# call in the cavalry (bring in the additional bots)
+	the_cavalry = cavalry(first_bot, room_link, num_bots)
+	# store all the new bots in our master bot list
+	bot_list.extend(the_cavalry)
+	return bot_list # return the stored list of bots
+
+# signal_handler() - handles closing the program, to ensure all drivers are quit properly
+# reference: https://www.devdungeon.com/content/python-catch-sigint-ctrl-c
+def signal_handler(signal_received, frame):
+	# Handle any cleanup here
+	print("\tClosing all bots, please wait...\n")
+	# for all bots stored in master list
+	for i in range(len(bot_list)):
+		leave_meeting(bot_list[i]) # leave and quit on each driver/bot
+	print("\tAll done! If you enjoyed this, shoot me a tweet @MaxPerrello\n")
+	sys.exit(0)
+
 def main(argv):
-	# print("\n\t--- Zoom Education Suite | Host Client ---\n")
-	# testing
-	# link_builder() testing
-	# print("original link: ", argv[1])
-	# print("\n new link: ", link_builder(argv[1]))
-	# start the webdriver (True = headless mode)
-	# driver = start_driver(True)
-	# run program
-	# login(driver, argv[1])
-	# open_participants(driver)
-	# count_reaction(driver)
-	# take_attendance(driver)
-	# who_participates(driver)
-	# call_on(driver)
-	# send_message(driver, "Everyone", "I'm ready to rumble, baby!") # opens and closes chat within the func
-	# time.sleep(2)
-	# # leave_meeting() is broken, but non-essential
-	# # leave_meeting(driver)
-	# time.sleep(10)
-	# print("\tFinished.\n")
-	# zoom.rip testing
-	driver = launch("https://us04web.zoom.us/j/521134612?pwd=Z0s0K2FRK0JFRFkyc0hUb2hpdFVHdz09", False)
+	print("\n\t--- zoom.rip | making remote learning fun ---\n")
+	driver_list = [] # store the bots so we can close 'em later
+	main_driver = launch("xxx", False)
+	driver_list.append(main_driver) # store the main one in the list
 	go_dark(driver[0])
 	time.sleep(60)
 
 if __name__ == '__main__':
-	main(sys.argv)
+	# main(sys.argv)
+	# Tell Python to run the handler() function when SIGINT is recieved
+	signal.signal(signal.SIGINT, signal_handler)
+	# start infiltrating! go bananas!
+	infiltrate()
+	print("\tUse Control + C to close all bots.") # print instructions
+	while True:
+		# Do nothing and hog CPU forever until SIGINT received.
+		pass

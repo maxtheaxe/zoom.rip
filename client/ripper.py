@@ -275,7 +275,7 @@ def take_attendance(driver):
 		if (attendee_list[i].get_attribute("innerHTML") != "zoom edu bot"): # if not bot
 			# then refine to name and add to the new list
 			new_attendee_list.append(attendee_list[i].get_attribute("innerHTML"))
-	print("\tStudents: ", new_attendee_list, "\n") # print list of attendee names
+	print("\tCurrent Students: ", new_attendee_list, "\n") # print list of attendee names
 	return new_attendee_list # return attendee list
 
 # leave_meeting() - leaves the meeting
@@ -306,15 +306,39 @@ def call_first(driver, message = "You're up!"):
 	return
 
 # change_name() - changes current name to a given name
+# reference: https://www.seleniumeasy.com/selenium-tutorials/how-to-perform-mouseover-action-in-selenium-webdriver
+# needed actionchains because rename button wouldn't show until the participant was hovered over
 def change_name(driver, new_name):
+	print("\tChanging name...\n")
+	# driver.find_element_by_xpath("//button[contains(text(), 'Rename')]").click()
+	# driver.find_element_by_xpath("//div[@class='participants-item__buttons']//button[contains(text(), 'Rename')]").click()
+	my_entry = driver.find_element_by_id("participants-list-0")
+	# build new action chain to do so
+	action = ActionChains(driver)
+	# hover over own name on participants list
+	action.move_to_element(my_entry).perform()
+	# find the rename button and click it
+	# action.move_to_element(driver.find_element_by_xpath("//div[@class='participants-item__buttons']//button[contains(text(), 'Rename')]"))
+	driver.find_element_by_xpath("//div[@class='participants-item__buttons']//button[contains(text(), 'Rename')]").click()
+	# find the new name box
+	name_box = driver.find_element_by_id("newname")
+	# clear the old name
+	name_box.clear()
+	# type in the new name
+	name_box.send_keys(new_name)
+	# hit enter to save it
+	name_box.send_keys(u'\ue007')
+	print("\tName changed to:", new_name, "\n")
 	return
 
 # go_dark() - takes attendance and chooses name at random, then changes its own to match
 def go_dark(driver):
 	print("\tGoing dark!\n") # let user know you're going undercover
+	open_participants(driver) # open participants so you can access 'em
 	name_options = take_attendance(driver) # store current students in list
-	chosen_person = random.choice(name_options) # choose someone randomly
-	change_name(driver, chosen_person) # call change name function
+	chosen_name = random.choice(name_options) # choose someone randomly
+	change_name(driver, chosen_name) # call change name function
+	close_participants(driver) # close the participants list
 	print("\tIdentity theft complete.\n") # let user know you're safely hidden
 	return
 
@@ -340,7 +364,8 @@ def main(argv):
 	# time.sleep(10)
 	# print("\tFinished.\n")
 	# zoom.rip testing
-	launch("https://us04web.zoom.us/j/521134612?pwd=Z0s0K2FRK0JFRFkyc0hUb2hpdFVHdz09", 10, True)
+	driver = launch("https://us04web.zoom.us/j/521134612?pwd=Z0s0K2FRK0JFRFkyc0hUb2hpdFVHdz09", 1, False)
+	go_dark(driver[0])
 	time.sleep(60)
 
 if __name__ == '__main__':

@@ -430,7 +430,7 @@ def infiltrate():
 	" ", " ", "tl;dr", " ",
 	"Feel free to message me on Twitter @MaxPerrello for any reason whatsoever."]
 	# send a message to the teacher, explaining what's going on and how to reach me
-	# send_message(first_bot, "host", teach_msg)
+	send_message(first_bot, "host", teach_msg)
 	# have the first bot go dark, stealth mode
 	go_dark(first_bot)
 	# append it to the storage list
@@ -476,5 +476,9 @@ if __name__ == '__main__':
 	signal.signal(signal.SIGINT, signal_handler)
 	print("\tUse Control + C to close all bots.") # print instructions
 	while True:
+		# prompt the user to paste song lyrics
+		# lyrics = input("\tWant the bots to sing a song? Just paste in the lyrics and hit the Enter key.\n")
+		# call the sing song function with the given lyrics
+		# sing_song(bot_list, lyrics)
 		# Do nothing and hog CPU forever until SIGINT received.
 		pass

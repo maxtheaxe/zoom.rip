@@ -13,6 +13,12 @@ import re
 import time
 import random
 import signal
+import os
+import inspect
+
+# set path to chrome driver for packaging purposes
+# ref: https://stackoverflow.com/questions/41030257/is-there-a-way-to-bundle-a-binary-file-such-as-chromedriver-with-a-single-file
+current_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe() ))[0]))
 
 # launch() - launch sequence to get driver started, logged in, and prepared to work
 def launch(room_link, headless = True, bot_name = "Matt Smith", verbose = False):
@@ -41,6 +47,8 @@ def multi_launch(room_link, num_clients = 1, headless = True, flood = True):
 # reference: https://stackoverflow.com/questions/12698843/how-do-i-pass-options-to-the-selenium-chrome-driver-using-python
 # reference: https://groups.google.com/forum/?hl=en-GB#!topic/selenium-users/ZANuzTA2VYQ
 def start_driver(headless = True):
+	# set path to chrome driver for packaging purposes
+	chromedriver = os.path.join(current_folder,"chromedriver.exe")
 	# setup webdriver settings
 	options = webdriver.ChromeOptions() # hiding startup info that pollutes terminal
 	options.headless = headless # headless or not, passed as arg
@@ -57,7 +65,7 @@ def start_driver(headless = True):
 	# make window size bigger to see all buttons
 	options.add_argument("--window-size=1600,1200")
 	# start webdriver and return it
-	return webdriver.Chrome(options=options)
+	return webdriver.Chrome(options = options, executable_path = chromedriver)
 
 # prompt() - prompts the host to enter the room link
 def prompt():

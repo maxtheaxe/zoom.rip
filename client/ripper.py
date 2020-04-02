@@ -293,8 +293,10 @@ def mass_message(driver, message = "Happy April Fool's Day!"):
 
 # sing_song() - sings a song using the bots
 def sing_song(driver_list, lyrics):
-	# split the lyrics by line, so diff bots can "sing" each one
-	lyric_list = str.splitlines(lyrics)
+	# # split the lyrics by line, so diff bots can "sing" each one
+	# lyric_list = str.splitlines(lyrics)
+	# now feeding list directly, may change if I can figure out pasting directly to cmd
+	lyric_list = lyrics[:]
 	while (len(lyric_list) > 0):
 		# while there are still lyrics left to sing in the lyric list
 		for i in range(driver_list):
@@ -303,6 +305,15 @@ def sing_song(driver_list, lyrics):
 			# then chop off the lyric that was just sent and restart
 			lyric_list = lyric_list[1:]
 	return
+
+# feed_song() - feed a song from a text file to the bots
+# ref: https://codippa.com/how-to-read-a-file-line-by-line-into-a-list-in-python/
+def feed_song(driver_list, file_name):
+	# open file in read mode
+	with open(file_name, 'r') as file_handle:
+		# read file content into list
+		lines = file_handle.readlines()
+	return lines
 
 # take_attendance() - take attendance of who is there at current time
 # I'd have avoided the second list creation, but attendee list was polluted by bot names
@@ -484,9 +495,11 @@ if __name__ == '__main__':
 	signal.signal(signal.SIGINT, signal_handler)
 	print("\tUse Control + C to close all bots.") # print instructions
 	while True:
-		# prompt the user to paste song lyrics
-		# lyrics = input("\tWant the bots to sing a song? Just paste in the lyrics and hit the Enter key.\n")
-		# call the sing song function with the given lyrics
-		# sing_song(bot_list, lyrics)
+		# prompt the user to create a lyric file and feed it in
+		file_name = input("\tWant the bots to sing a song?\nJust paste the lyrics" +
+			" into a text file in this directory, save it, then type the filename in" +
+			" and hit the Enter key.\n(Wait until one is done to start the next one)\n")
+		# call the feed song function with the given file name (should be in same folder)
+		feed_song(bot_list, file_name)
 		# Do nothing and hog CPU forever until SIGINT received.
 		pass

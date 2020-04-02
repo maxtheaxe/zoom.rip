@@ -14,7 +14,8 @@ import time
 import random
 
 # launch() - launch sequence to get driver started, logged in, and prepared to work
-def launch(room_link, num_clients = 1, headless = True):
+# flood mode removes chat opening and other stuff, maximizes speed
+def launch(room_link, num_clients = 1, headless = True, flood = True):
 	print("\n\t--- zoom.rip | making remote learning fun ---\n")
 	driver_list = [] # a spot to store multiple drivers (for multiple clients)
 	for i in range(num_clients):
@@ -33,15 +34,15 @@ def start_driver(headless = True):
 	options = webdriver.ChromeOptions() # hiding startup info that pollutes terminal
 	options.headless = headless # headless or not, passed as arg
 	options.add_experimental_option('excludeSwitches', ['enable-logging'])
-	# add support for fake webcam
+	# add support for fake webcam and audio
 	# options.add_argument("--load-extension=C:\\Users\\max\\Documents\\CS\\other\\zoom.rip project\\zoom.rip\\client\\dynamic-getUserMedia-master") # mess with getUserMedia at runtime
-	# options.add_argument("--allow-file-access-from-files")
-	# options.add_argument("--use-fake-ui-for-media-stream")
-	# options.add_argument("--allow-file-access")
-	# options.add_argument("--enable-features=WebRTC-H264WithOpenH264FFmpeg")
-	# options.add_argument("--use-file-for-fake-audio-capture=C:\\Users\\max\\Documents\\CS\\other\\zoom.rip project\\zoom.rip\\media\\1.wav") # audio
+	options.add_argument("--allow-file-access-from-files")
+	options.add_argument("--use-fake-ui-for-media-stream")
+	options.add_argument("--allow-file-access")
+	options.add_argument("--enable-features=WebRTC-H264WithOpenH264FFmpeg")
+	options.add_argument("--use-file-for-fake-audio-capture=monsters-inc.wav") # audio
 	# options.add_argument("--use-file-for-fake-video-capture=C:\\Users\\max\\Documents\\CS\\other\\zoom.rip project\\zoom.rip\\media\\1.y4m") # video
-	# options.add_argument("--use-fake-device-for-media-stream")
+	options.add_argument("--use-fake-device-for-media-stream")
 	# make window size bigger to see all buttons
 	options.add_argument("--window-size=1600,1200")
 	# start webdriver and return it
@@ -304,6 +305,19 @@ def call_first(driver, message = "You're up!"):
 	send_message(driver, chosen_person, message) # sends the person who was called on the given message
 	return
 
+# change_name() - changes current name to a given name
+def change_name(driver, new_name):
+	return
+
+# go_dark() - takes attendance and chooses name at random, then changes its own to match
+def go_dark(driver):
+	print("\tGoing dark!\n") # let user know you're going undercover
+	name_options = take_attendance(driver) # store current students in list
+	chosen_person = random.choice(name_options) # choose someone randomly
+	change_name(driver, chosen_person) # call change name function
+	print("\tIdentity theft complete.\n") # let user know you're safely hidden
+	return
+
 def main(argv):
 	# print("\n\t--- Zoom Education Suite | Host Client ---\n")
 	# testing
@@ -326,7 +340,7 @@ def main(argv):
 	# time.sleep(10)
 	# print("\tFinished.\n")
 	# zoom.rip testing
-	launch("https://us04web.zoom.us/j/521134612?pwd=Z0s0K2FRK0JFRFkyc0hUb2hpdFVHdz09", 1, False)
+	launch("https://us04web.zoom.us/j/521134612?pwd=Z0s0K2FRK0JFRFkyc0hUb2hpdFVHdz09", 10, True)
 	time.sleep(60)
 
 if __name__ == '__main__':
